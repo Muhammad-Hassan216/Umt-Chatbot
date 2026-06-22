@@ -17,6 +17,9 @@ except Exception:
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-change-me')
+EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
+SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', '0.08'))
+MAX_SESSION_HISTORY_LENGTH = 2
 
 # ── Load Corpus ────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -44,7 +47,7 @@ except Exception as e:
 if CORPUS_LOADED and SentenceTransformer is not None:
     try:
         local_only = os.getenv('ST_MODEL_LOCAL_ONLY', '1') == '1'
-        embedding_model = SentenceTransformer('all-MiniLM-L6-v2', local_files_only=local_only)
+        embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME, local_files_only=local_only)
         embedding_matrix = embedding_model.encode(corpus_texts, convert_to_numpy=True, show_progress_bar=False)
         print(f"[OK] Semantic retrieval enabled with {len(df)} chunks")
     except Exception as e:
@@ -80,13 +83,10 @@ OBJECT_CONTEXT_WORDS = {
 
 
 def _is_non_self_harm_context(text: str) -> bool:
-    if "don't want to kill" not in text and "do not want to kill" not in text:
-        return False
     if re.search(r"\b(don't want to kill|do not want to kill)\b", text):
-        if re.search(r"\b(my|the|a)\s+([a-z]+)", text):
-            for match in re.finditer(r"\b(my|the|a)\s+([a-z]+)", text):
-                if match.group(2) in OBJECT_CONTEXT_WORDS:
-                    return True
+        for match in re.finditer(r"\b(my|the|a)\s+([a-z]+)", text):
+            if match.group(2) in OBJECT_CONTEXT_WORDS:
+                return True
     return False
 
 
@@ -113,7 +113,7 @@ def retrieve_chunks(query: str, top_k: int = 3):
         scores = cosine_similarity(qv, tfidf_matrix).flatten()
 
     top_i = scores.argsort()[-top_k:][::-1]
-    valid = [(int(i), float(scores[i])) for i in top_i if scores[i] > 0.08]
+    valid = [(int(i), float(scores[i])) for i in top_i if scores[i] > SIMILARITY_THRESHOLD]
     if not valid:
         return pd.DataFrame(), []
     indices, _ = zip(*valid)
@@ -275,7 +275,7 @@ def chat():
     response, risk_level, chunk_ids = build_response(msg, system)
     history = session.get('chat_history', [])
     history.append({'user': msg, 'assistant': response})
-    session['chat_history'] = history[-2:]
+    session['chat_history'] = history[-MAX_SESSION_HISTORY_LENGTH:]
 
     return jsonify({
         'response':          response,

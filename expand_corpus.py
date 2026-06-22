@@ -22,6 +22,7 @@ DATA_DIR = BASE_DIR / 'group_23_campus_support_resources'
 CORPUS_PATH = DATA_DIR / '2_corpus_chunks.csv'
 SOURCES_PATH = DATA_DIR / '1_sources.csv'
 PDF_PATH = DATA_DIR / 'Handbook Undergraduate Studies 2025-26 150126.pdf'
+SCRAPE_TIMEOUT_SECONDS = 15
 
 
 def _normalize(text: str) -> str:
@@ -76,7 +77,7 @@ def _scrape_chunks():
     scraped = []
     for url in urls:
         try:
-            res = requests.get(url, timeout=15)
+            res = requests.get(url, timeout=SCRAPE_TIMEOUT_SECONDS)
             if res.status_code != 200:
                 continue
             soup = BeautifulSoup(res.text, 'html.parser')
