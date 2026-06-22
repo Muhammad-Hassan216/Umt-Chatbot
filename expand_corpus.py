@@ -9,21 +9,11 @@ try:
 except Exception:
     pdfplumber = None
 
-try:
-    import requests
-    from bs4 import BeautifulSoup
-except Exception:
-    requests = None
-    BeautifulSoup = None
-
-
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / 'group_23_campus_support_resources'
 CORPUS_PATH = DATA_DIR / '2_corpus_chunks.csv'
 SOURCES_PATH = DATA_DIR / '1_sources.csv'
 PDF_PATH = DATA_DIR / 'Handbook Undergraduate Studies 2025-26 150126.pdf'
-SCRAPE_TIMEOUT_SECONDS = 15
-MAX_CHUNKS_PER_URL = 2
 
 
 def _normalize(text: str) -> str:
@@ -66,32 +56,6 @@ def _extract_pdf_chunks(limit: int = 120):
     return chunks[:limit]
 
 
-def _scrape_chunks():
-    if requests is None or BeautifulSoup is None:
-        return []
-    urls = [
-        'https://skt.umt.edu.pk/Contact-Us.aspx',
-        'https://skt.umt.edu.pk/Admissions.aspx',
-        'https://skt.umt.edu.pk/News-Events.aspx',
-    ]
-    scraped = []
-    for url in urls:
-        try:
-            res = requests.get(url, timeout=SCRAPE_TIMEOUT_SECONDS)
-            if res.status_code != 200:
-                continue
-            soup = BeautifulSoup(res.text, 'html.parser')
-            title = _normalize(soup.title.get_text()) if soup.title else 'UMT Sialkot Web Page'
-            blocks = [el.get_text(' ', strip=True) for el in soup.select('p, li')]
-            text = _normalize(' '.join(blocks[:120]))
-            for chunk in _split_to_chunks(text, min_words=70, max_words=130)[:MAX_CHUNKS_PER_URL]:
-                scraped.append((title, chunk))
-        except requests.RequestException as e:
-            print(f'[WARN] Failed to scrape {url}: {type(e).__name__}: {e}')
-            continue
-    return scraped
-
-
 def _next_chunk_id(existing_ids):
     max_no = 0
     for cid in existing_ids:
@@ -124,64 +88,6 @@ def run():
             'source_id': 'S001',
             'allowed_use': 'Campus policy and support information',
             'blocked_use': 'Legal or medical advice replacement',
-            'language': 'English',
-        })
-        existing_text.add(key)
-        next_id += 1
-
-    manual_chunks = [
-        (
-            'Financial Aid and Fee Support',
-            'UMT provides financial support pathways that may include scholarships merit support and fee concessions depending on eligibility and institutional policy. Students facing payment challenges should contact the admissions or student affairs office early and share relevant documents before fee deadlines. Official departments can guide students on current criteria timelines and required forms. If you are unsure where to begin use info@skt.umt.edu.pk and ask to be routed to financial aid support for your campus.',
-            'financial_support'
-        ),
-        (
-            'Hostel and Accommodation Guidance',
-            'Students looking for hostel and accommodation information should contact campus administration for the latest approved housing guidance. Availability rules and fee structures may change each semester and should be verified through official UMT channels. Ask for current accommodation options distance from campus and safety arrangements before making commitments. If you need immediate direction send your program and campus details to info@skt.umt.edu.pk to get routed to the relevant office.',
-            'accommodation_support'
-        ),
-        (
-            'Academic Regulations and GPA Policy Support',
-            'Academic regulations including GPA requirements probation rules attendance policies and progression criteria are governed by official university regulations and handbook policies. Students should review the current handbook and consult their academic advisor for program specific interpretation. If you are worried about low GPA or academic standing seek guidance early from your department and student support offices. Early consultation helps you understand options for improvement and formal procedures.',
-            'academic_regulations'
-        ),
-    ]
-
-    for title, text, category in manual_chunks:
-        key = text.strip().lower()
-        if key in existing_text:
-            continue
-        additions.append({
-            'group_id': 'G23',
-            'chunk_id': f'G23_C{next_id:03d}',
-            'topic': 'Campus Support Resources',
-            'category': category,
-            'risk_level': 'L0_NORMAL',
-            'title': title,
-            'text': text,
-            'source_id': 'S001',
-            'allowed_use': 'Official student support routing',
-            'blocked_use': 'Unofficial policy guarantees',
-            'language': 'English',
-        })
-        existing_text.add(key)
-        next_id += 1
-
-    for title, text in _scrape_chunks():
-        key = text.strip().lower()
-        if key in existing_text:
-            continue
-        additions.append({
-            'group_id': 'G23',
-            'chunk_id': f'G23_C{next_id:03d}',
-            'topic': 'UMT Website Updates',
-            'category': 'web_resources',
-            'risk_level': 'L0_NORMAL',
-            'title': title[:120],
-            'text': text,
-            'source_id': 'S007',
-            'allowed_use': 'General campus information and contact routing',
-            'blocked_use': 'Unverified or outdated assumptions',
             'language': 'English',
         })
         existing_text.add(key)

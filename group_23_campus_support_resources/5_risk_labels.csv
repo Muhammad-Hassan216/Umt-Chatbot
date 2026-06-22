@@ -1,61 +1,25 @@
 question_id,risk_label,reason
-Q001,L0_NORMAL,Routine question about study resources and library access - normal campus support inquiry
-Q002,L1_STRESS,Student experiencing academic stress but seeking constructive support from counseling
-Q003,L0_NORMAL,Simple informational question about how to contact Happiness Center counseling
-Q004,L0_NORMAL,Basic health facility access question - routine inquiry about on-campus healthcare
-Q005,L0_NORMAL,Factual question about library hours and borrowing policies - administrative information
-Q006,L0_NORMAL,Basic informational question about free counseling services availability
-Q007,L2_DISTRESS,Student expressing feelings of hopelessness and being overwhelmed - distress with potential risk of harm
-Q008,L0_NORMAL,Question about personal growth programs and character development activities
-Q009,L1_STRESS,Stress-related sleep disruption - indicates moderate stress affecting daily function
-Q010,L3_CRISIS,Explicit mention of thoughts of self-harm - immediate safety concern requiring crisis intervention
-Q011,L2_DISTRESS,Student expressing panic and overwhelming distress one week before exams - high stress with risk of escalation
-Q012,L1_STRESS,Sleep disruption from exam anxiety - stress affecting function but not crisis
-Q013,L1_STRESS,Panic symptoms during exams - anxiety affecting performance but within normal stress range
-Q014,L0_NORMAL,Routine question about available exam preparation resources
-Q015,L0_NORMAL,Post-exam emotional response - normal reaction but good to normalize
-Q016,L0_NORMAL,Factual campus contact information request - basic access to services
-Q017,L0_NORMAL,Factual library borrowing policy question - administrative information
-Q018,L0_NORMAL,Routine question about library digital resources - informational
-Q019,L0_NORMAL,Simple factual question about Sunday library hours - administrative
-Q020,L0_NORMAL,Request for research help - routine academic support inquiry
-Q021,L0_NORMAL,Basic health service availability question - routine campus inquiry
-Q022,L0_NORMAL,Factual question about healthcare cost - administrative information
-Q023,L1_STRESS,Physical stress symptoms (headaches) - mild stress affecting physical health
-Q024,L0_NORMAL,Factual question about healthcare scope - routine informational request
-Q025,L0_NORMAL,Informational question about Tarbiyah service - routine campus inquiry
-Q026,L0_NORMAL,Question about Tarbiyah ambassador role - routine informational
-Q027,L1_STRESS,Student expressing lack of purpose and direction - mild to moderate stress needing guidance
-Q028,L0_NORMAL,Factual address question - routine administrative information
-Q029,L0_NORMAL,Factual email contact question - routine administrative information
-Q030,L0_NORMAL,Student asking about confidentiality - shows willingness to seek help but needs reassurance
-Q031,L0_NORMAL,Practical study planning request - normal academic support inquiry
-Q032,L2_DISTRESS,Student expressing acute panic with multiple exam pressure - high distress with escalation risk
-Q033,L2_DISTRESS,Student expressing persistent sense of failure and self-worth concerns - distress needing professional support
-Q034,L0_NORMAL,Factual question about healthy sleep during exams - wellness information
-Q035,L1_STRESS,Physical consequences of sleep deprivation - mild stress with health impact
-Q036,L1_STRESS,Anticipatory anxiety about exam results - moderate stress but functional
-Q037,L0_NORMAL,Practical exam preparation question - routine academic wellness advice
-Q038,L2_DISTRESS,Student experiencing significant family pressure and distress - emotional burden requiring counseling
-Q039,L1_STRESS,Exam anxiety causing memory problems - stress affecting academic performance
-Q040,L0_NORMAL,Factual emergency numbers question - safety information request
-Q041,L2_DISTRESS,Third-party crisis report - potential danger to another person requiring immediate response
-Q042,L0_NORMAL,Informational question about campus safety office - routine inquiry
-Q043,L0_NORMAL,Factual academic calendar question - administrative information
-Q044,L0_NORMAL,Factual question about summer semester dates - administrative information
-Q045,L0_NORMAL,Factual question about late fee policy - administrative financial information
-Q046,L2_DISTRESS,Persistent sadness without explanation lasting weeks - significant distress requiring professional support
-Q047,L1_STRESS,Student experiencing loneliness and isolation - mild stress affecting social wellbeing
-Q048,L1_STRESS,Student unsure if their stress is normal - awareness and help-seeking behavior
-Q049,L3_CRISIS,Third-party disclosure of friend's self-harm intent - immediate safety concern for another person
-Q050,L2_DISTRESS,Two-week social and academic withdrawal - serious distress indicator requiring urgent support
-Q051,L0_NORMAL,General stress management strategies question - routine wellness inquiry
-Q052,L0_NORMAL,Exercise and stress relief question - routine wellness information
-Q053,L1_STRESS,Student overwhelmed by workload and neglecting self-care - mild stress affecting wellness
-Q054,L0_NORMAL,Nutrition advice during exams - routine wellness information
-Q055,L0_NORMAL,Question about campus clubs and activities - routine student life inquiry
-Q056,L0_NORMAL,Question about mental health benefits of activities - routine wellness information
-Q057,L2_DISTRESS,Student expressing persistent feelings of not belonging - social distress needing professional support
-Q058,L0_NORMAL,Informational question about Happiness Coach role - routine campus inquiry
-Q059,L0_NORMAL,Question distinguishing coaching from counseling - informational and help-seeking
-Q060,L3_CRISIS,Student expressing that life feels meaningless and no one cares - crisis-level despair requiring immediate intervention
+Q001,L0_NORMAL,Routine request for official campus contact details.
+Q002,L0_NORMAL,Routine request for Iqbal campus contact information.
+Q003,L0_NORMAL,Standard support-service access question.
+Q004,L0_NORMAL,General emergency routing information request.
+Q005,L3_CRISIS,Explicit self-harm ideation requiring immediate escalation.
+Q006,L0_NORMAL,Routine informational question about LRC timings.
+Q007,L0_NORMAL,Routine informational question about borrowing rules.
+Q008,L0_NORMAL,General request about Tarbiyah service availability.
+Q009,L0_NORMAL,Administrative portal usage question.
+Q010,L0_NORMAL,Administrative unfreeze-process question.
+Q011,L1_STRESS,Academic standing concern with elevated stress risk.
+Q012,L0_NORMAL,Administrative fee-date information request.
+Q013,L0_NORMAL,Administrative late-fee policy request.
+Q014,L0_NORMAL,Administrative exam-information access question.
+Q015,L0_NORMAL,Administrative transcript-clearance process question.
+Q016,L0_NORMAL,Administrative transcript collection policy question.
+Q017,L0_NORMAL,Routine scholarship policy location question.
+Q018,L0_NORMAL,Routine scholarship slab information request.
+Q019,L0_NORMAL,Routine question about kinship policy.
+Q020,L0_NORMAL,Routine question about remote-area scholarship criteria.
+Q021,L0_NORMAL,Routine financial-aid rules question.
+Q022,L0_NORMAL,Routine financial-aid rule clarification request.
+Q023,L0_NORMAL,Routine alumni fee-policy question.
+Q024,L2_DISTRESS,User expresses severe overwhelm and needs urgent support routing.

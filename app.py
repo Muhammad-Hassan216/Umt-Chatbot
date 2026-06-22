@@ -150,7 +150,7 @@ FALLBACK = (
 # Appended to every non-crisis response so users always verify with official source
 SOURCE_DISCLAIMER = (
     "\n\n---\n"
-    "📋 *Source: UMT Participants Handbook 2025-26 & Academic Calendar 2025-26. "
+    "📋 *Source: UMT Participants Handbook 2025-26 and verified UMT Sialkot contact records. "
     "Contact info and policies may change — always verify at **[skt.umt.edu.pk](https://skt.umt.edu.pk)** "
     "or email **info@skt.umt.edu.pk** for the latest information.*"
 )
@@ -208,19 +208,19 @@ def build_response(query: str, system: str):
     if system == 'S0':
         q = query.lower()
         if any(w in q for w in ['counsel', 'mental', 'help', 'stress', 'anxiety', 'sad', 'depress', 'feel', 'emotion', 'happy', 'unhappy']):
-            r = "UMT Sialkot has a **Happiness Center** with professional clinical psychologists. Email **cc.center@umt.edu.pk** to book a free, confidential appointment."
+            r = "UMT Sialkot provides support routing through the **Happiness Center**. Email **cc.center@umt.edu.pk** and verify latest process details through official UMT channels."
         elif any(w in q for w in ['library', 'book', 'study', 'research', 'tutor', 'lrc']):
-            r = "The **Learning Resource Center** is open **8am–9pm** weekdays and **10am–5pm** Sundays. Visit for research support, book borrowing (4 books / 14 days), and databases."
+            r = "The **Learning Resource Center (LRC)** is listed as open **8am–9pm** and **10am–5pm on Sundays**. Borrowing guidance includes **4 books for 14 days** for undergraduates."
         elif any(w in q for w in ['health', 'sick', 'doctor', 'medical', 'clinic', 'nurse', 'hospital']):
-            r = "UMT has an **on-campus physician and nurse** providing free clinical evaluation and treatment. Visit the healthcare clinic — no additional cost to enrolled students."
+            r = "For urgent safety issues, contact **OSS&V** and call **15** or **1122** immediately. For non-emergency support routing, use **cc.center@umt.edu.pk** or **info@skt.umt.edu.pk**."
         elif any(w in q for w in ['contact', 'phone', 'number', 'email', 'address', 'location', 'where', 'reach']):
             r = ("📍 **City Campus:** 21-A Small Industrial Estate, Shahabpura Road — Tel: **+92 52 3241801-7**\n\n"
                  "📍 **Iqbal Campus:** 2-KM Daska Road — Tel: **+92 52 3575234-36**\n\n"
                  "📧 **Email:** info@skt.umt.edu.pk")
         elif any(w in q for w in ['exam', 'final', 'test', 'midterm', 'result', 'grade']):
-            r = "**Final Exams run June 29 – July 11, 2026.** For exam stress, the **Happiness Center** is available at cc.center@umt.edu.pk. The **Library** is open until 9pm for exam prep."
+            r = "Exam schedules and result-related updates are provided through official university channels (student portal, Moodle, and notices from relevant offices). For stress support, contact **cc.center@umt.edu.pk**."
         elif any(w in q for w in ['tarbiyah', 'personal', 'growth', 'character', 'values', 'islamic']):
-            r = "The **Tarbiyah Department** offers personal growth and values-based counseling through the **Ask Asiya desk** and Tarbiyah Ambassadors. Programs focus on character building and healthy relationships."
+            r = "The handbook lists a **Tarbiyah Department** support area. Please confirm current services through official campus channels such as **info@skt.umt.edu.pk**."
         else:
             r = "Thank you for reaching out. For support at UMT Sialkot, contact **info@skt.umt.edu.pk** or call **+92 52 3241801**. The **Happiness Center** provides free counseling at cc.center@umt.edu.pk."
         return r + SOURCE_DISCLAIMER, 'L0_NORMAL', []
