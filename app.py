@@ -20,6 +20,8 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-change-me')
 EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
 SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', '0.08'))
 MAX_SESSION_HISTORY_LENGTH = 2
+NEGATION_PATTERN = re.compile(r"\b(don't want to kill|do not want to kill)\b")
+GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash')
 
 # ── Load Corpus ────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -83,7 +85,7 @@ OBJECT_CONTEXT_WORDS = {
 
 
 def _is_non_self_harm_context(text: str) -> bool:
-    if re.search(r"\b(don't want to kill|do not want to kill)\b", text):
+    if NEGATION_PATTERN.search(text):
         for match in re.finditer(r"\b(my|the|a)\s+([a-z]+)", text):
             if match.group(2) in OBJECT_CONTEXT_WORDS:
                 return True
@@ -173,7 +175,7 @@ def _try_generate_with_gemini(query: str, context: str, risk: str):
         return None
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel(GEMINI_MODEL_NAME)
         prompt = (
             "You are a campus support assistant for UMT Sialkot.\n"
             "Answer only from the provided context.\n"

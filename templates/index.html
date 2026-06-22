@@ -509,7 +509,8 @@
 <div id="toast"></div>
 
 <script>
-  let currentSystem = 'S2';
+  const DEFAULT_SYSTEM = 'S2';
+  let currentSystem = DEFAULT_SYSTEM;
   let waiting = false;
 
   const RISK = {
@@ -532,7 +533,7 @@
     ['S0','S1','S2','S3'].forEach(x => {
       const b = document.getElementById('btn-'+x);
       b.classList.toggle('active', x === s);
-      b.textContent = x + (x==='S2' ? ' ✓' : '');
+      b.textContent = x + (x===DEFAULT_SYSTEM ? ' ✓' : '');
     });
     document.getElementById('sysBoxLabel').textContent = SYS_LABELS[s];
   }

@@ -38,12 +38,11 @@ def _split_to_chunks(text: str, min_words: int = 90, max_words: int = 150):
     i = 0
     while i < len(words):
         end = min(i + max_words, len(words))
+        if end < len(words) and (end - i) < min_words:
+            end = min(i + min_words, len(words))
         window = words[i:end]
-        if len(window) < min_words and end != len(words):
-            i += max_words
-            continue
         chunks.append(' '.join(window))
-        i += max_words
+        i = end
     return chunks
 
 

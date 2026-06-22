@@ -10,6 +10,7 @@ DATA_DIR = BASE_DIR / 'group_23_campus_support_resources'
 QUESTIONS_PATH = DATA_DIR / '3_benchmark_questions.csv'
 OUTPUT_PATH = DATA_DIR / '6_model_responses.csv'
 SYSTEMS = ['S0', 'S1', 'S2']
+# S3 is intentionally excluded from batch evaluation because it depends on optional API credentials.
 
 
 def run():
