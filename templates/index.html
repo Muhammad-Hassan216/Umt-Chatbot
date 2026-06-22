@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBridge RAG – UMT Sialkot Campus Support</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+    :root {
+      --primary:      #4f46e5;
+      --primary-dark: #3730a3;
+      --sidebar-bg:   #1e1b4b;
+      --chat-bg:      #f0f4ff;
+      --l0-c: #059669; --l0-bg: #ecfdf5;
+      --l1-c: #d97706; --l1-bg: #fffbeb;
+      --l2-c: #dc2626; --l2-bg: #fef2f2;
+      --l3-c: #ef4444; --l3-bg: #fee2e2;
+    }
+
+    html, body { height: 100%; margin: 0; overflow: hidden; background: var(--chat-bg); }
+
+    /* ── Navbar ─────────────────────────────────────────── */
+    .navbar {
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      padding: 0 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(79,70,229,.35);
+      z-index: 100;
+      position: relative;
+    }
+    .brand {
+      display: flex; align-items: center; gap: .5rem;
+      color: #fff; font-weight: 700; font-size: 1.15rem; text-decoration: none;
+    }
+    .brand-icon { background: rgba(255,255,255,.18); border-radius: 8px; padding: 4px 9px; }
+    .umt-pill {
+      background: rgba(255,255,255,.15); color: #fff;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px; padding: 2px 12px; font-size: .72rem; font-weight: 500;
+    }
+
+    /* System toggle */
+    .sys-toggle { display:flex; background:rgba(255,255,255,.1); border-radius:24px; padding:3px; gap:2px; }
+    .sys-btn {
+      border: none; background: transparent; color: rgba(255,255,255,.65);
+      padding: 4px 14px; border-radius: 20px; font-size: .78rem; font-weight: 500;
+      cursor: pointer; transition: all .2s; font-family: 'Poppins', sans-serif;
+    }
+    .sys-btn.active { background: #fff; color: var(--primary); font-weight: 700; }
+    .sys-btn:hover:not(.active) { background: rgba(255,255,255,.2); color: #fff; }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .app-layout {
+      display: flex; height: calc(100vh - 56px); overflow: hidden;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────── */
+    .sidebar {
+      width: 255px; min-width: 255px;
+      background: var(--sidebar-bg);
+      color: #e0e7ff;
+      display: flex; flex-direction: column;
+      padding: .9rem .85rem;
+      overflow-y: auto; overflow-x: hidden;
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+
+    /* Risk Indicator */
+    .risk-box {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; padding: .8rem 1rem; text-align: center;
+      transition: all .4s; margin-bottom: .75rem;
+    }
+    .risk-label-txt { font-size: .6rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.4); margin-bottom: .15rem; }
+    .risk-val { font-size: 1rem; font-weight: 700; color: var(--l0-c); display: flex; align-items: center; justify-content: center; gap: .4rem; transition: color .3s; }
+    .risk-val.l1 { color: var(--l1-c); }
+    .risk-val.l2 { color: var(--l2-c); animation: blink 1.5s ease-in-out infinite; }
+    .risk-val.l3 { color: var(--l3-c); animation: blink .8s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* System info box */
+    .sys-box {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px; padding: .55rem .85rem;
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .75rem; color: #a5b4fc; margin-bottom: .9rem;
+    }
+
+    .sidebar-heading { font-size: .6rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.35); margin: .9rem 0 .4rem; }
+
+    .res-card {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 9px; padding: .5rem .7rem;
+      display: flex; align-items: center; gap: .6rem;
+      cursor: pointer; transition: all .2s; margin-bottom: .3rem;
+    }
+    .res-card:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.18); }
+    .res-card.emg { background: rgba(220,38,38,.15); border-color: rgba(220,38,38,.3); }
+    .res-card.emg:hover { background: rgba(220,38,38,.25); }
+    .res-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.72rem; flex-shrink:0; }
+    .res-name { font-size:.72rem; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .res-contact { font-size:.62rem; color:rgba(255,255,255,.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .res-copy { color:rgba(255,255,255,.25); font-size:.6rem; flex-shrink:0; transition:color .2s; }
+    .res-card:hover .res-copy { color:rgba(255,255,255,.6); }
+
+    .sidebar-footer {
+      margin-top: auto; padding-top: .8rem; font-size: .58rem;
+      color: rgba(255,255,255,.25); line-height: 1.6;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .freshness-box {
+      background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.25);
+      border-radius: 9px; padding: .5rem .75rem; margin-bottom: .75rem;
+      font-size: .65rem; color: #fbbf24; line-height: 1.5;
+    }
+    .freshness-box a { color: #fde68a; }
+    .freshness-box strong { color: #fef3c7; }
+
+    /* ── Chat Main ───────────────────────────────────────── */
+    .chat-main { flex:1; display:flex; flex-direction:column; overflow:hidden; background: var(--chat-bg); }
+
+    /* Banner */
+    .top-banner {
+      background: linear-gradient(90deg, #ede9fe, #dbeafe);
+      border-bottom: 1px solid #c7d2fe;
+      padding: .45rem 1.2rem;
+      font-size: .77rem; color: #3730a3;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .close-banner { background:none; border:none; color:#3730a3; cursor:pointer; font-size:.85rem; padding:0; }
+
+    /* Messages container */
+    .messages {
+      flex:1; overflow-y:auto; padding: 1.25rem 1.25rem .75rem;
+      display:flex; flex-direction:column; gap:.85rem;
+    }
+    .messages::-webkit-scrollbar { width:4px; }
+    .messages::-webkit-scrollbar-thumb { background:#c7d2fe; border-radius:2px; }
+
+    /* Message row */
+    .msg { display:flex; align-items:flex-start; gap:.65rem; max-width:82%; animation: fadeUp .3s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .msg.bot { align-self:flex-start; }
+    .msg.usr { align-self:flex-end; flex-direction:row-reverse; }
+
+    .av {
+      width:34px; height:34px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.8rem; flex-shrink:0;
+    }
+    .av.bot { background: linear-gradient(135deg,var(--primary),#7c3aed); color:#fff; }
+    .av.usr { background: linear-gradient(135deg,#0ea5e9,#06b6d4); color:#fff; }
+
+    .bubble {
+      border-radius:16px; padding:.7rem .9rem;
+      position:relative; max-width:100%;
+    }
+    .bubble.bot { background:#fff; box-shadow:0 1px 5px rgba(0,0,0,.08); border-top-left-radius:4px; }
+    .bubble.usr { background:var(--primary); border-top-right-radius:4px; }
+
+    .msg-meta { display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; margin-bottom:.35rem; }
+    .risk-badge {
+      font-size:.62rem; font-weight:600; padding:2px 8px;
+      border-radius:10px; display:inline-flex; align-items:center; gap:3px;
+    }
+    .src-badge { font-size:.58rem; background:#ede9fe; color:#6d28d9; padding:2px 7px; border-radius:8px; }
+    .sys-badge { font-size:.58rem; background:#f0f4ff; color:var(--primary); padding:2px 7px; border-radius:8px; font-weight:700; }
+
+    .msg-text p { margin:0 0 .35rem; font-size:.845rem; line-height:1.65; color:#1f2937; }
+    .msg-text p:last-child { margin:0; }
+    .msg-text strong { color:#1e1b4b; }
+    .bubble.usr .msg-text p { color:#fff; }
+    .bubble.usr .msg-text strong { color:#fff; }
+
+    .msg-time { font-size:.58rem; color:#9ca3af; display:block; margin-top:.3rem; text-align:right; }
+    .bubble.usr .msg-time { color:rgba(255,255,255,.55); }
+
+    /* Typing dots */
+    .typing { display:flex; align-items:flex-start; gap:.65rem; align-self:flex-start; }
+    .dots-bubble { background:#fff; border-radius:16px; border-top-left-radius:4px; padding:.7rem .9rem; box-shadow:0 1px 5px rgba(0,0,0,.08); display:flex; gap:4px; align-items:center; }
+    .dot { width:7px; height:7px; background:#9ca3af; border-radius:50%; animation:dot-bounce 1.2s ease-in-out infinite; }
+    .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+    @keyframes dot-bounce { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-6px);opacity:1} }
+
+    /* Suggestion chips */
+    .chips { padding:.45rem 1.25rem; background:#fff; border-top:1px solid #e5e7eb; display:flex; gap:.4rem; overflow-x:auto; }
+    .chips::-webkit-scrollbar { height:0; }
+    .chip {
+      background:#ede9fe; color:var(--primary); border:none;
+      border-radius:20px; padding:5px 13px; font-size:.72rem; font-weight:500;
+      cursor:pointer; white-space:nowrap; transition:all .2s;
+      font-family:'Poppins',sans-serif;
+    }
+    .chip:hover { background:var(--primary); color:#fff; }
+
+    /* Input area */
+    .input-area { padding:.85rem 1.25rem; background:#fff; border-top:1px solid #e5e7eb; }
+    .input-row { display:flex; gap:.65rem; align-items:flex-end; }
+    .msg-input {
+      flex:1; border:2px solid #e5e7eb; border-radius:12px;
+      padding:.65rem .9rem; font-family:'Poppins',sans-serif;
+      font-size:.845rem; resize:none; outline:none;
+      transition:border-color .2s; min-height:44px; max-height:110px; line-height:1.5;
+    }
+    .msg-input:focus { border-color:var(--primary); }
+    .send-btn {
+      background:linear-gradient(135deg,var(--primary),#7c3aed); color:#fff;
+      border:none; border-radius:12px; width:44px; height:44px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:all .2s; flex-shrink:0; font-size:.9rem;
+    }
+    .send-btn:hover:not(:disabled) { transform:scale(1.06); opacity:.92; }
+    .send-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .disclaimer { font-size:.62rem; color:#9ca3af; text-align:center; margin-top:.35rem; }
+
+    /* ── Crisis Modal ────────────────────────────────────── */
+    #crisisModal {
+      position:fixed; inset:0; background:rgba(120,0,0,.97);
+      z-index:9999; display:none; align-items:center; justify-content:center;
+    }
+    #crisisModal.show { display:flex; animation:crisisIn .3s ease; }
+    @keyframes crisisIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+    .crisis-box {
+      background:#450a0a; border:2px solid #fca5a5; border-radius:20px;
+      padding:2.25rem 2rem; max-width:470px; width:90%; text-align:center; color:#fff;
+    }
+    .crisis-emo { font-size:2.8rem; animation:pulse2 1s ease-in-out infinite; margin-bottom:.75rem; }
+    @keyframes pulse2 { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+    .crisis-title { font-size:1.4rem; font-weight:700; color:#fca5a5; margin-bottom:.3rem; }
+    .crisis-sub { color:#fecaca; font-size:.82rem; margin-bottom:1.3rem; }
+    .crisis-row {
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2);
+      border-radius:11px; padding:.65rem .9rem; margin-bottom:.6rem;
+      display:flex; align-items:center; gap:.7rem; text-align:left;
+    }
+    .crisis-row-label { font-size:.7rem; color:#fca5a5; flex:1; }
+    .crisis-row-val { font-size:1.25rem; font-weight:700; color:#fff; }
+    .crisis-email { font-size:.78rem !important; }
+    .crisis-dismiss {
+      background:rgba(255,255,255,.08); color:#fca5a5;
+      border:1px solid #fca5a5; border-radius:8px;
+      padding:7px 22px; font-family:'Poppins',sans-serif;
+      cursor:pointer; margin-top:.9rem; font-size:.77rem; transition:all .2s;
+    }
+    .crisis-dismiss:hover { background:rgba(252,165,165,.12); }
+
+    /* Toast */
+    #toast {
+      position:fixed; bottom:20px; right:20px;
+      background:#059669; color:#fff;
+      padding:8px 16px; border-radius:9px;
+      font-size:.78rem; z-index:99999; display:none;
+      animation:fadeUp .25s ease;
+    }
+
+    /* Responsive */
+    @media(max-width:768px) { .sidebar { display:none; } }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ────────────────────────────────────────────── -->
+<nav class="navbar">
+  <a class="brand" href="#">
+    <span class="brand-icon"><i class="fas fa-brain"></i></span>
+    MindBridge&nbsp;RAG
+  </a>
+
+  <div class="sys-toggle">
+    <button class="sys-btn" id="btn-S0" onclick="setSystem('S0')" title="Basic keyword matching — No RAG">S0</button>
+    <button class="sys-btn" id="btn-S1" onclick="setSystem('S1')" title="Retrieval-Augmented Generation">S1</button>
+    <button class="sys-btn active" id="btn-S2" onclick="setSystem('S2')" title="Safety-Aware RAG (Recommended)">S2 ✓</button>
+  </div>
+
+  <span class="umt-pill"><i class="fas fa-university me-1"></i>UMT Sialkot</span>
+</nav>
+
+<!-- ── App Layout ─────────────────────────────────────────── -->
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Risk Indicator -->
+    <div class="risk-box" id="riskBox">
+      <div class="risk-label-txt">Current Risk Level</div>
+      <div class="risk-val" id="riskVal"><i class="fas fa-circle-check"></i>&nbsp;L0_NORMAL</div>
+    </div>
+
+    <!-- Active System -->
+    <div class="sys-box" id="sysBox">
+      <i class="fas fa-shield-halved"></i>
+      <span id="sysBoxLabel">S2 – Safety-Aware RAG</span>
+    </div>
+
+    <!-- Emergency -->
+    <div class="sidebar-heading"><i class="fas fa-triangle-exclamation me-1"></i>Emergency</div>
+
+    <div class="res-card emg">
+      <div class="res-icon" style="background:#7f1d1d;color:#fff"><i class="fas fa-phone"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">Emergency Services</div>
+        <div class="res-contact">15 &nbsp;|&nbsp; 1122 (Rescue)</div>
+      </div>
+    </div>
+
+    <div class="res-card emg">
+      <div class="res-icon" style="background:#7f1d1d;color:#fff"><i class="fas fa-shield"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">OSS&V – Safety Office</div>
+        <div class="res-contact">On-campus security &amp; vigilance</div>
+      </div>
+    </div>
+
+    <!-- Support -->
+    <div class="sidebar-heading"><i class="fas fa-heart me-1"></i>Support</div>
+
+    <div class="res-card" onclick="copyText('cc.center@umt.edu.pk')">
+      <div class="res-icon" style="background:#4f46e5;color:#fff"><i class="fas fa-brain"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">Happiness Center</div>
+        <div class="res-contact">cc.center@umt.edu.pk</div>
+      </div>
+      <i class="fas fa-copy res-copy"></i>
+    </div>
+
+    <div class="res-card" onclick="copyText('+925232418017')">
+      <div class="res-icon" style="background:#059669;color:#fff"><i class="fas fa-building"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">City Campus</div>
+        <div class="res-contact">+92 52 3241801-7</div>
+      </div>
+      <i class="fas fa-copy res-copy"></i>
+    </div>
+
+    <div class="res-card" onclick="copyText('+925235752346')">
+      <div class="res-icon" style="background:#059669;color:#fff"><i class="fas fa-building-columns"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">Iqbal Campus</div>
+        <div class="res-contact">+92 52 3575234-36</div>
+      </div>
+      <i class="fas fa-copy res-copy"></i>
+    </div>
+
+    <div class="res-card" onclick="copyText('info@skt.umt.edu.pk')">
+      <div class="res-icon" style="background:#0ea5e9;color:#fff"><i class="fas fa-envelope"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">General Info</div>
+        <div class="res-contact">info@skt.umt.edu.pk</div>
+      </div>
+      <i class="fas fa-copy res-copy"></i>
+    </div>
+
+    <!-- Academic -->
+    <div class="sidebar-heading"><i class="fas fa-book me-1"></i>Academic</div>
+
+    <div class="res-card">
+      <div class="res-icon" style="background:#7c3aed;color:#fff"><i class="fas fa-book-open"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">Library (LRC)</div>
+        <div class="res-contact">8am–9pm daily · 10am–5pm Sun</div>
+      </div>
+    </div>
+
+    <div class="res-card">
+      <div class="res-icon" style="background:#d97706;color:#fff"><i class="fas fa-calendar-days"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">Final Exams</div>
+        <div class="res-contact">June 29 – July 11, 2026</div>
+      </div>
+    </div>
+
+    <div class="res-card">
+      <div class="res-icon" style="background:#6b7280;color:#fff"><i class="fas fa-mosque"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">Tarbiyah Dept</div>
+        <div class="res-contact">Ask Asiya desk · Values counseling</div>
+      </div>
+    </div>
+
+    <!-- Data Freshness Warning -->
+    <div class="freshness-box">
+      <i class="fas fa-circle-info me-1"></i><strong>Data Notice</strong><br>
+      Based on UMT Handbook 2025-26.<br>
+      Policies &amp; contacts may change.<br>
+      Always verify at <a href="https://skt.umt.edu.pk" target="_blank">skt.umt.edu.pk</a>
+      or email <strong>info@skt.umt.edu.pk</strong>
+    </div>
+
+    <div class="sidebar-footer">
+      This chatbot provides general guidance only. It is <strong>not</strong> a substitute for professional counseling.<br>
+      For emergencies call <strong>15</strong> or <strong>1122</strong> immediately.
+    </div>
+  </aside>
+
+  <!-- Main Chat -->
+  <main class="chat-main">
+
+    <!-- Banner -->
+    <div class="top-banner" id="banner">
+      <span><i class="fas fa-triangle-exclamation me-1"></i> <strong>Data source: UMT Handbook 2025-26</strong> — Info may change. Verify at <a href="https://skt.umt.edu.pk" target="_blank" style="color:#3730a3;font-weight:600">skt.umt.edu.pk</a> | Finals: <strong>June 29 – July 11</strong></span>
+      <button class="close-banner" onclick="document.getElementById('banner').style.display='none'"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <!-- Welcome -->
+      <div class="msg bot">
+        <div class="av bot"><i class="fas fa-brain"></i></div>
+        <div class="bubble bot">
+          <div class="msg-meta">
+            <span class="risk-badge" style="background:#ecfdf5;color:#059669"><i class="fas fa-circle-check"></i> L0 Normal</span>
+            <span class="sys-badge">S2</span>
+          </div>
+          <div class="msg-text">
+            <p><strong>Welcome to MindBridge RAG</strong> 👋 — your campus support assistant for <strong>UMT Sialkot</strong>.</p>
+            <p>I can help you find:</p>
+            <p>💙 <strong>Mental health support</strong> (Happiness Center)<br>
+               📚 <strong>Academic resources</strong> (Library, tutoring)<br>
+               🏥 <strong>Healthcare services</strong> (on-campus physician)<br>
+               🆘 <strong>Emergency contacts</strong> (15 / 1122)</p>
+            <p>With <strong>Final Exams starting June 29</strong>, I'm here to help you navigate stress and find the right support. How can I help you today?</p>
+          </div>
+          <span class="msg-time">Just now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestion Chips -->
+    <div class="chips" id="chips">
+      <button class="chip" onclick="ask('How do I contact the Happiness Center?')">💙 Happiness Center</button>
+      <button class="chip" onclick="ask('I am stressed about my exams next week')">😰 Exam Stress</button>
+      <button class="chip" onclick="ask('What are the library hours?')">📚 Library Hours</button>
+      <button class="chip" onclick="ask('I cannot sleep because of exam anxiety')">😴 Can\'t Sleep</button>
+      <button class="chip" onclick="ask('What health services are available on campus?')">🏥 Health Services</button>
+      <button class="chip" onclick="ask('How do I contact UMT Sialkot campus?')">📞 Contact Info</button>
+      <button class="chip" onclick="ask('What personal development programs does Tarbiyah offer?')">🌱 Tarbiyah</button>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-row">
+        <textarea
+          class="msg-input" id="msgInput"
+          placeholder="Type your question or share what you're going through..."
+          rows="1"
+          onkeydown="onKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="send()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="disclaimer">
+        <i class="fas fa-shield-halved"></i>
+        This is not a crisis line. If you are in immediate danger, call <strong>15</strong> or <strong>1122</strong>.
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Crisis Modal ───────────────────────────────────────── -->
+<div id="crisisModal">
+  <div class="crisis-box">
+    <div class="crisis-emo">🆘</div>
+    <div class="crisis-title">You Are Not Alone</div>
+    <div class="crisis-sub">Your message suggests you may be in a crisis.<br>Please reach out for immediate help <strong>right now</strong>.</div>
+
+    <div class="crisis-row">
+      <span style="font-size:1.4rem">🚨</span>
+      <div class="crisis-row-label">Police / Emergency</div>
+      <div class="crisis-row-val">15</div>
+    </div>
+    <div class="crisis-row">
+      <span style="font-size:1.4rem">🚑</span>
+      <div class="crisis-row-label">Rescue Services</div>
+      <div class="crisis-row-val">1122</div>
+    </div>
+    <div class="crisis-row">
+      <span style="font-size:1.4rem">💙</span>
+      <div class="crisis-row-label">Happiness Center</div>
+      <div class="crisis-row-val crisis-email">cc.center@umt.edu.pk</div>
+    </div>
+    <div class="crisis-row">
+      <span style="font-size:1.4rem">🔒</span>
+      <div class="crisis-row-label">OSS&V — Campus Safety Office</div>
+      <div class="crisis-row-val crisis-email">On Campus</div>
+    </div>
+
+    <p style="color:#fecaca;font-size:.78rem;margin-top:.85rem">
+      You matter. This feeling will pass. Professional help is available right now.
+    </p>
+    <button class="crisis-dismiss" onclick="closeCrisis()">
+      I have noted the emergency contacts — Return to chat
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  let currentSystem = 'S2';
+  let waiting = false;
+
+  const RISK = {
+    L0_NORMAL:  { label:'L0 Normal',  color:'#059669', bg:'#ecfdf5', icon:'fa-circle-check',      cls:'' },
+    L1_STRESS:  { label:'L1 Stress',  color:'#d97706', bg:'#fffbeb', icon:'fa-triangle-exclamation', cls:'l1' },
+    L2_DISTRESS:{ label:'L2 Distress',color:'#dc2626', bg:'#fef2f2', icon:'fa-heart-pulse',        cls:'l2' },
+    L3_CRISIS:  { label:'L3 Crisis',  color:'#ef4444', bg:'#fee2e2', icon:'fa-circle-exclamation', cls:'l3' }
+  };
+
+  const SYS_LABELS = {
+    S0:'S0 – Basic (No RAG)',
+    S1:'S1 – Retrieval RAG',
+    S2:'S2 – Safety-Aware RAG'
+  };
+
+  /* ── System select ────────────────────────────────────── */
+  function setSystem(s) {
+    currentSystem = s;
+    ['S0','S1','S2'].forEach(x => {
+      const b = document.getElementById('btn-'+x);
+      b.classList.toggle('active', x === s);
+      b.textContent = x + (x==='S2' ? ' ✓' : '');
+    });
+    document.getElementById('sysBoxLabel').textContent = SYS_LABELS[s];
+  }
+
+  /* ── Helpers ──────────────────────────────────────────── */
+  function now() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+
+  function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function md(t) {
+    let s = esc(t);
+    s = s.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    s = s.replace(/\*(.*?)\*/g,'<em>$1</em>');
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" style="color:#4f46e5">$1</a>');
+    // render --- as horizontal rule
+    s = s.replace(/(?:^|\n)---(?:\n|$)/g, '<hr style="border:none;border-top:1px solid #e5e7eb;margin:.4rem 0">');
+    const parts = s.split(/\n\n+/);
+    return parts.map(p => { if(!p.trim()) return ''; return '<p style="margin:0 0 .3rem">'+p.replace(/\n/g,'<br>')+'</p>'; }).join('');
+  }
+
+  function scrollEnd() {
+    const c = document.getElementById('messages');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+
+  function onKey(e) { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } }
+
+  /* ── Copy toast ───────────────────────────────────────── */
+  function copyText(v) {
+    navigator.clipboard.writeText(v).catch(()=>{});
+    const t = document.getElementById('toast');
+    t.textContent = '✓ Copied: '+v;
+    t.style.display = 'block';
+    setTimeout(()=>{ t.style.display='none'; }, 2000);
+  }
+
+  /* ── Add messages ─────────────────────────────────────── */
+  function addUser(text) {
+    const c = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.className = 'msg usr';
+    d.innerHTML = `
+      <div class="bubble usr">
+        <div class="msg-text"><p>${esc(text)}</p></div>
+        <span class="msg-time">${now()}</span>
+      </div>
+      <div class="av usr"><i class="fas fa-user"></i></div>`;
+    c.appendChild(d); scrollEnd();
+  }
+
+  function addBot(text, riskLevel, chunkIds, sys) {
+    const r  = RISK[riskLevel] || RISK.L0_NORMAL;
+    const ch = chunkIds && chunkIds.length
+      ? `<span class="src-badge"><i class="fas fa-database"></i> ${chunkIds.length} source${chunkIds.length>1?'s':''} retrieved</span>`
+      : '';
+    const c  = document.getElementById('messages');
+    const d  = document.createElement('div');
+    d.className = 'msg bot';
+    d.innerHTML = `
+      <div class="av bot"><i class="fas fa-brain"></i></div>
+      <div class="bubble bot">
+        <div class="msg-meta">
+          <span class="risk-badge" style="background:${r.bg};color:${r.color}">
+            <i class="fas ${r.icon}"></i> ${r.label}
+          </span>
+          ${ch}
+          <span class="sys-badge">${sys||currentSystem}</span>
+        </div>
+        <div class="msg-text">${md(text)}</div>
+        <span class="msg-time">${now()}</span>
+      </div>`;
+    c.appendChild(d); scrollEnd();
+  }
+
+  /* ── Typing indicator ─────────────────────────────────── */
+  function showTyping() {
+    const c = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.id='typing'; d.className='typing';
+    d.innerHTML=`<div class="av bot"><i class="fas fa-brain"></i></div><div class="dots-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    c.appendChild(d); scrollEnd();
+  }
+  function hideTyping() { const e=document.getElementById('typing'); if(e) e.remove(); }
+
+  /* ── Risk indicator ───────────────────────────────────── */
+  function updateRisk(level) {
+    const r  = RISK[level] || RISK.L0_NORMAL;
+    const rv = document.getElementById('riskVal');
+    const rb = document.getElementById('riskBox');
+    rv.className = 'risk-val ' + r.cls;
+    rv.innerHTML = `<i class="fas ${r.icon}"></i>&nbsp;${level}`;
+    if(level==='L3_CRISIS'){
+      rb.style.background='rgba(220,38,38,.12)'; rb.style.borderColor='rgba(220,38,38,.45)';
+    } else if(level==='L2_DISTRESS'){
+      rb.style.background='rgba(220,38,38,.07)'; rb.style.borderColor='rgba(220,38,38,.25)';
+    } else {
+      rb.style.background='rgba(255,255,255,.06)'; rb.style.borderColor='rgba(255,255,255,.1)';
+    }
+  }
+
+  /* ── Crisis modal ─────────────────────────────────────── */
+  function openCrisis() { document.getElementById('crisisModal').classList.add('show'); }
+  function closeCrisis(){ document.getElementById('crisisModal').classList.remove('show'); }
+
+  /* ── Suggestion chips ─────────────────────────────────── */
+  function ask(q) { document.getElementById('msgInput').value = q; send(); }
+
+  /* ── Send ─────────────────────────────────────────────── */
+  async function send() {
+    if(waiting) return;
+    const inp = document.getElementById('msgInput');
+    const msg = inp.value.trim();
+    if(!msg) return;
+
+    inp.value=''; inp.style.height='auto';
+    waiting=true;
+    document.getElementById('sendBtn').disabled=true;
+    document.getElementById('chips').style.display='none';
+
+    addUser(msg);
+    showTyping();
+
+    try {
+      const res  = await fetch('/chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:msg, system:currentSystem})
+      });
+      const data = await res.json();
+      await new Promise(r=>setTimeout(r,350));
+      hideTyping();
+      addBot(data.response, data.risk_level, data.retrieved_chunks, data.system);
+      updateRisk(data.risk_level);
+      if(data.risk_level==='L3_CRISIS') setTimeout(openCrisis, 500);
+    } catch(err) {
+      hideTyping();
+      addBot('Sorry, I encountered a connection error. Please contact campus directly:\n\n- 📞 **+92 52 3241801-7**\n- 📧 **info@skt.umt.edu.pk**', 'L0_NORMAL', [], currentSystem);
+    } finally {
+      waiting=false;
+      document.getElementById('sendBtn').disabled=false;
+      inp.focus();
+    }
+  }
+
+  window.onload=()=>document.getElementById('msgInput').focus();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
