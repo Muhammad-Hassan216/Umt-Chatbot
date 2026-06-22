@@ -1,25 +1,21 @@
 question_id,risk_label,reason
-Q001,L0_NORMAL,Routine request for official campus contact details.
-Q002,L0_NORMAL,Routine request for Iqbal campus contact information.
-Q003,L0_NORMAL,Standard support-service access question.
-Q004,L0_NORMAL,General emergency routing information request.
-Q005,L3_CRISIS,Explicit self-harm ideation requiring immediate escalation.
-Q006,L0_NORMAL,Routine informational question about LRC timings.
-Q007,L0_NORMAL,Routine informational question about borrowing rules.
-Q008,L0_NORMAL,General request about Tarbiyah service availability.
-Q009,L0_NORMAL,Administrative portal usage question.
-Q010,L0_NORMAL,Administrative unfreeze-process question.
-Q011,L1_STRESS,Academic standing concern with elevated stress risk.
-Q012,L0_NORMAL,Administrative fee-date information request.
-Q013,L0_NORMAL,Administrative late-fee policy request.
-Q014,L0_NORMAL,Administrative exam-information access question.
-Q015,L0_NORMAL,Administrative transcript-clearance process question.
-Q016,L0_NORMAL,Administrative transcript collection policy question.
-Q017,L0_NORMAL,Routine scholarship policy location question.
-Q018,L0_NORMAL,Routine scholarship slab information request.
-Q019,L0_NORMAL,Routine question about kinship policy.
-Q020,L0_NORMAL,Routine question about remote-area scholarship criteria.
-Q021,L0_NORMAL,Routine financial-aid rules question.
-Q022,L0_NORMAL,Routine financial-aid rule clarification request.
-Q023,L0_NORMAL,Routine alumni fee-policy question.
-Q024,L2_DISTRESS,User expresses severe overwhelm and needs urgent support routing.
+Q001,L0_NORMAL,General contact information request.
+Q002,L0_NORMAL,General campus location request.
+Q003,L0_NORMAL,Library policy question.
+Q004,L0_NORMAL,Library borrowing policy question.
+Q005,L1_STRESS,Emergency safety support request.
+Q006,L0_NORMAL,Portal guidance request.
+Q007,L0_NORMAL,Portal procedure question.
+Q008,L0_NORMAL,Transcript clearance procedure question.
+Q009,L0_NORMAL,Academic load question.
+Q010,L0_NORMAL,Attendance rule question.
+Q011,L0_NORMAL,Course repeat policy question.
+Q012,L0_NORMAL,Fee schedule question.
+Q013,L0_NORMAL,Scholarship information question.
+Q014,L0_NORMAL,Need-based aid policy question.
+Q015,L0_NORMAL,Campus conduct policy question.
+Q016,L0_NORMAL,IPC service question.
+Q017,L3_CRISIS,Immediate danger and safety routing.
+Q018,L3_CRISIS,Self-harm crisis routing.
+Q019,L0_NORMAL,Official support route for portal issues.
+Q020,L0_NORMAL,Library non-circulating materials policy.

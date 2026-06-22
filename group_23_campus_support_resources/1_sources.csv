@@ -1,7 +1,5 @@
 group_id,source_id,source_title,source_type,source_link_or_reference,reason_for_use
-G23,S001,UMT Participants Handbook 2025-26,official_document,Handbook Undergraduate Studies 2025-26 150126.pdf,"Primary auditable source for campus policies, portals, examinations, fee rules, and scholarships."
-G23,S002,Happiness Center Contact (UMT),official_contact,cc.center@umt.edu.pk,Verified counseling/support contact route published in project resources and app fallbacks.
+G23,S001,UMT Participants Handbook 2025-26,official_document,Handbook Undergraduate Studies 2025-26 150126.pdf,"Primary auditable source for campus policies, portal/admin procedures, examinations, fee rules, and student support rules."
 G23,S003,Learning Resource Center (LRC),official_document,"Section 16, UMT Participants Handbook 2025-26","Handbook-backed library timing, access, and borrowing policy references."
-G23,S004,Emergency Communications and OSS&V,official_document,"Section 21, UMT Participants Handbook 2025-26",Handbook-backed emergency communication process and OSS&V escalation pathway.
-G23,S005,Tarbiyah Department,official_document,"Section 20, UMT Participants Handbook 2025-26",High-level existence of Tarbiyah support services in handbook table of contents.
-G23,S007,UMT Sialkot Campus Official Contact Information,official_page,https://skt.umt.edu.pk/Contact-Us.aspx,"Verified phone numbers, addresses, and general campus email for City and Iqbal campuses."
+G23,S004,Emergency Communications and OSS&V,official_document,"Section 21, UMT Participants Handbook 2025-26","Handbook-backed emergency communication process and OSS&V escalation pathway."
+G23,S007,UMT Sialkot Campus Official Contact Information,official_page,https://skt.umt.edu.pk/Contact-Us.aspx,"Verified phone numbers, addresses, and general campus email for campus contact and routing."
