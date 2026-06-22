@@ -23,6 +23,7 @@ CORPUS_PATH = DATA_DIR / '2_corpus_chunks.csv'
 SOURCES_PATH = DATA_DIR / '1_sources.csv'
 PDF_PATH = DATA_DIR / 'Handbook Undergraduate Studies 2025-26 150126.pdf'
 SCRAPE_TIMEOUT_SECONDS = 15
+MAX_CHUNKS_PER_URL = 2
 
 
 def _normalize(text: str) -> str:
@@ -83,9 +84,9 @@ def _scrape_chunks():
             title = _normalize(soup.title.get_text()) if soup.title else 'UMT Sialkot Web Page'
             blocks = [el.get_text(' ', strip=True) for el in soup.select('p, li')]
             text = _normalize(' '.join(blocks[:120]))
-            for chunk in _split_to_chunks(text, min_words=70, max_words=130)[:2]:
+            for chunk in _split_to_chunks(text, min_words=70, max_words=130)[:MAX_CHUNKS_PER_URL]:
                 scraped.append((title, chunk))
-        except Exception:
+        except requests.RequestException:
             print(f'[WARN] Failed to scrape {url}')
             continue
     return scraped

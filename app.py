@@ -17,7 +17,9 @@ except Exception:
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-change-me')
+# Default sentence-transformers embedding model identifier used for semantic retrieval.
 EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
+# 0.08 keeps weak matches out while still returning relevant support chunks for short queries.
 SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', '0.08'))
 MAX_SESSION_HISTORY_LENGTH = 2
 NEGATION_PATTERN = re.compile(r"\b(don't want to kill|do not want to kill)\b")
@@ -155,7 +157,10 @@ SOURCE_DISCLAIMER = (
 def _expand_query_with_context(query: str) -> str:
     last_turns = session.get('chat_history', [])
     follow_up_markers = ['that', 'it', 'more', 'this', 'explain', 'details']
-    if len(query.split()) <= MAX_FOLLOWUP_QUERY_WORDS and any(m in query.lower() for m in follow_up_markers) and last_turns:
+    is_short_query = len(query.split()) <= MAX_FOLLOWUP_QUERY_WORDS
+    has_followup_marker = any(m in query.lower() for m in follow_up_markers)
+    has_history = bool(last_turns)
+    if is_short_query and has_followup_marker and has_history:
         return f"{last_turns[-1].get('user', '')} {query}".strip()
     return query
 
@@ -243,6 +248,7 @@ def build_response(query: str, system: str):
         generated = _try_generate_with_gemini(query, combined_text, risk)
         if generated:
             return generated + SOURCE_DISCLAIMER, risk, chunk_ids
+        # If optional generation is unavailable, fall back to deterministic S2-style response composition.
 
     prefix = suffix = ''
     if risk == 'L2_DISTRESS':
