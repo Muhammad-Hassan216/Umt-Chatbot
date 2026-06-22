@@ -142,6 +142,10 @@ Each question is designed to evaluate if the RAG system:
 ### Challenge 4: Making Project "Extraordinary" Beyond Requirements
 - **Solution:** Added timely exam-stress focus with 6 new chunks + 5 new questions leveraging Academic Calendar 2025-26 (exams June 29-July 11)
 
+### Challenge 5: Keyword Risk Classifier False Positives
+- **Known failure mode:** A pure keyword match can misclassify non-self-harm contexts (for example "I don't want to kill my plants") as L3 crisis.
+- **Solution:** Added a negation/object-context filter in classifier logic and documented that lexical routing should still be reviewed with human evaluation for ambiguous language.
+
 ## Contribution to Final Paper
 
 This dataset contributes to the MindBridge-RAG research in several ways:

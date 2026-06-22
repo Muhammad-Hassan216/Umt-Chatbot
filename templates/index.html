@@ -278,6 +278,7 @@
     <button class="sys-btn" id="btn-S0" onclick="setSystem('S0')" title="Basic keyword matching — No RAG">S0</button>
     <button class="sys-btn" id="btn-S1" onclick="setSystem('S1')" title="Retrieval-Augmented Generation">S1</button>
     <button class="sys-btn active" id="btn-S2" onclick="setSystem('S2')" title="Safety-Aware RAG (Recommended)">S2 ✓</button>
+    <button class="sys-btn" id="btn-S3" onclick="setSystem('S3')" title="Safety-Aware RAG + Optional LLM Generation">S3</button>
   </div>
 
   <span class="umt-pill"><i class="fas fa-university me-1"></i>UMT Sialkot</span>
@@ -521,13 +522,14 @@
   const SYS_LABELS = {
     S0:'S0 – Basic (No RAG)',
     S1:'S1 – Retrieval RAG',
-    S2:'S2 – Safety-Aware RAG'
+    S2:'S2 – Safety-Aware RAG',
+    S3:'S3 – Safety + Optional Generation'
   };
 
   /* ── System select ────────────────────────────────────── */
   function setSystem(s) {
     currentSystem = s;
-    ['S0','S1','S2'].forEach(x => {
+    ['S0','S1','S2','S3'].forEach(x => {
       const b = document.getElementById('btn-'+x);
       b.classList.toggle('active', x === s);
       b.textContent = x + (x==='S2' ? ' ✓' : '');

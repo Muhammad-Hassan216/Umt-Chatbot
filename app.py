@@ -1,29 +1,54 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
+import os
+import re
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import os
+
+try:
+    from sentence_transformers import SentenceTransformer
+except Exception:
+    SentenceTransformer = None
+
+try:
+    import google.generativeai as genai
+except Exception:
+    genai = None
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-change-me')
 
 # ── Load Corpus ────────────────────────────────────────────────────────────────
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-CORPUS_PATH = os.path.join(BASE_DIR, 'group_23_campus_support_resources', '2_corpus_chunks.csv')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'group_23_campus_support_resources')
+CORPUS_PATH = os.path.join(DATA_DIR, '2_corpus_chunks.csv')
 
 CORPUS_LOADED = False
 df = None
+corpus_texts = []
 vectorizer = None
 tfidf_matrix = None
+embedding_model = None
+embedding_matrix = None
 
 try:
     df = pd.read_csv(CORPUS_PATH)
     corpus_texts = (df['title'].fillna('') + ' ' + df['text'].fillna('')).tolist()
-    vectorizer   = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)
+    vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)
     tfidf_matrix = vectorizer.fit_transform(corpus_texts)
     CORPUS_LOADED = True
     print(f"[OK] Corpus loaded: {len(df)} chunks")
 except Exception as e:
     print(f"[WARN] Could not load corpus: {e}")
+
+if CORPUS_LOADED and SentenceTransformer is not None:
+    try:
+        local_only = os.getenv('ST_MODEL_LOCAL_ONLY', '1') == '1'
+        embedding_model = SentenceTransformer('all-MiniLM-L6-v2', local_files_only=local_only)
+        embedding_matrix = embedding_model.encode(corpus_texts, convert_to_numpy=True, show_progress_bar=False)
+        print(f"[OK] Semantic retrieval enabled with {len(df)} chunks")
+    except Exception as e:
+        print(f"[WARN] Semantic model unavailable, fallback to TF-IDF: {e}")
 
 # ── Risk Classification ─────────────────────────────────────────────────────────
 RISK_KEYWORDS = {
@@ -31,13 +56,13 @@ RISK_KEYWORDS = {
         'suicide', 'suicidal', 'kill myself', 'kill my self', 'self-harm',
         'self harm', 'end my life', 'want to die', 'hurt myself', 'hurt my self',
         'take my life', 'not worth living', 'no reason to live', 'better off dead',
-        'end it all', 'don\'t want to live'
+        'end it all', "don't want to live", 'i want to die'
     ],
     'L2_DISTRESS': [
         'hopeless', 'overwhelmed', "can't cope", 'cannot cope', 'falling apart',
         'breaking down', 'no point', 'worthless', 'i give up', 'giving up',
         'desperate', 'feel empty', 'feeling empty', 'nothing matters',
-        'panic attack', 'devastated', 'can\'t go on', 'cannot go on'
+        'panic attack', 'devastated', "can't go on", 'cannot go on'
     ],
     'L1_STRESS': [
         'stressed', 'anxious', 'anxiety', 'worried', 'nervous',
@@ -47,22 +72,48 @@ RISK_KEYWORDS = {
     ]
 }
 
+OBJECT_CONTEXT_WORDS = {
+    'plant', 'plants', 'tree', 'trees', 'flower', 'flowers', 'grass',
+    'phone', 'laptop', 'computer', 'battery', 'app', 'game', 'bug', 'process',
+    'mosquito', 'insect', 'cockroach', 'time'
+}
+
+
+def _is_non_self_harm_context(text: str) -> bool:
+    if "don't want to kill" not in text and "do not want to kill" not in text:
+        return False
+    if re.search(r"\b(don't want to kill|do not want to kill)\b", text):
+        if re.search(r"\b(my|the|a)\s+([a-z]+)", text):
+            for match in re.finditer(r"\b(my|the|a)\s+([a-z]+)", text):
+                if match.group(2) in OBJECT_CONTEXT_WORDS:
+                    return True
+    return False
+
+
 def classify_risk(text: str) -> str:
     t = text.lower()
     for level in ['L3_CRISIS', 'L2_DISTRESS', 'L1_STRESS']:
         for kw in RISK_KEYWORDS[level]:
             if kw in t:
+                if level == 'L3_CRISIS' and _is_non_self_harm_context(t):
+                    continue
                 return level
     return 'L0_NORMAL'
 
-# ── Retrieval ───────────────────────────────────────────────────────────────────
+
 def retrieve_chunks(query: str, top_k: int = 3):
     if not CORPUS_LOADED:
         return pd.DataFrame(), []
-    qv     = vectorizer.transform([query])
-    scores = cosine_similarity(qv, tfidf_matrix).flatten()
-    top_i  = scores.argsort()[-top_k:][::-1]
-    valid  = [(int(i), float(scores[i])) for i in top_i if scores[i] > 0.01]
+
+    if embedding_model is not None and embedding_matrix is not None:
+        qv = embedding_model.encode([query], convert_to_numpy=True, show_progress_bar=False)
+        scores = cosine_similarity(qv, embedding_matrix).flatten()
+    else:
+        qv = vectorizer.transform([query])
+        scores = cosine_similarity(qv, tfidf_matrix).flatten()
+
+    top_i = scores.argsort()[-top_k:][::-1]
+    valid = [(int(i), float(scores[i])) for i in top_i if scores[i] > 0.08]
     if not valid:
         return pd.DataFrame(), []
     indices, _ = zip(*valid)
@@ -96,7 +147,50 @@ SOURCE_DISCLAIMER = (
     "or email **info@skt.umt.edu.pk** for the latest information.*"
 )
 
+def _expand_query_with_context(query: str) -> str:
+    last_turns = session.get('chat_history', [])
+    follow_up_markers = ['that', 'it', 'more', 'this', 'explain', 'details']
+    if len(query.split()) <= 6 and any(m in query.lower() for m in follow_up_markers) and last_turns:
+        return f"{last_turns[-1].get('user', '')} {query}".strip()
+    return query
+
+
+def _combine_chunk_text(chunks: pd.DataFrame) -> str:
+    if len(chunks) == 0:
+        return ''
+    if len(chunks) == 1:
+        return chunks.iloc[0]['text']
+
+    lines = ["Here's what I found from UMT resources:"]
+    for _, row in chunks.head(3).iterrows():
+        lines.append(f"- {row['text']}")
+    return "\n\n".join(lines)
+
+
+def _try_generate_with_gemini(query: str, context: str, risk: str):
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key or genai is None:
+        return None
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = (
+            "You are a campus support assistant for UMT Sialkot.\n"
+            "Answer only from the provided context.\n"
+            "Do not provide medical diagnosis, legal advice, or therapy claims.\n"
+            "If risk is L2 or above, be supportive and direct user to official support channels.\n\n"
+            f"Risk level: {risk}\n"
+            f"User question: {query}\n\n"
+            f"Context:\n{context}\n"
+        )
+        result = model.generate_content(prompt)
+        return (result.text or '').strip()
+    except Exception:
+        return None
+
+
 def build_response(query: str, system: str):
+    query_for_retrieval = _expand_query_with_context(query)
     risk = classify_risk(query)
 
     # ── S0: Keyword-only, no RAG ────────────────────────────────────────────────
@@ -121,23 +215,29 @@ def build_response(query: str, system: str):
         return r + SOURCE_DISCLAIMER, 'L0_NORMAL', []
 
     # ── S1 & S2: RAG ────────────────────────────────────────────────────────────
-    chunks, _ = retrieve_chunks(query)
+    chunks, _ = retrieve_chunks(query_for_retrieval)
 
     if system == 'S1':
         # Plain RAG — no safety layer
         if len(chunks) == 0:
             return FALLBACK + SOURCE_DISCLAIMER, 'L0_NORMAL', []
-        return chunks.iloc[0]['text'] + SOURCE_DISCLAIMER, 'L0_NORMAL', list(chunks['chunk_id'])
+        body = "Here's what I found in UMT resources:\n\n" + chunks.iloc[0]['text']
+        return body + SOURCE_DISCLAIMER, 'L0_NORMAL', list(chunks['chunk_id'])
 
-    # S2 — Safety-aware RAG
+    # S2/S3 — Safety-aware RAG
     if risk == 'L3_CRISIS':
         return CRISIS_RESPONSE, 'L3_CRISIS', []
 
     if len(chunks) == 0:
         return FALLBACK, risk, []
 
-    best       = chunks.iloc[0]
-    chunk_ids  = list(chunks['chunk_id'])
+    chunk_ids = list(chunks['chunk_id'])
+    combined_text = _combine_chunk_text(chunks)
+
+    if system == 'S3':
+        generated = _try_generate_with_gemini(query, combined_text, risk)
+        if generated:
+            return generated + SOURCE_DISCLAIMER, risk, chunk_ids
 
     prefix = suffix = ''
     if risk == 'L2_DISTRESS':
@@ -151,7 +251,7 @@ def build_response(query: str, system: str):
         suffix = ("\n\nRemember, the **Happiness Center** (cc.center@umt.edu.pk) provides "
                   "free, confidential support anytime you need it. 💙")
 
-    return prefix + best['text'] + suffix + SOURCE_DISCLAIMER, risk, chunk_ids
+    return prefix + combined_text + suffix + SOURCE_DISCLAIMER, risk, chunk_ids
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 @app.route('/')
@@ -169,10 +269,13 @@ def chat():
 
     if not msg:
         return jsonify({'error': 'Empty message'}), 400
-    if system not in ('S0', 'S1', 'S2'):
+    if system not in ('S0', 'S1', 'S2', 'S3'):
         system = 'S2'
 
     response, risk_level, chunk_ids = build_response(msg, system)
+    history = session.get('chat_history', [])
+    history.append({'user': msg, 'assistant': response})
+    session['chat_history'] = history[-2:]
 
     return jsonify({
         'response':          response,
