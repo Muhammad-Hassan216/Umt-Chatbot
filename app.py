@@ -17,17 +17,13 @@ except Exception:
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-change-me')
-# Default sentence-transformers embedding model identifier used for semantic retrieval.
-# Override via EMBEDDING_MODEL_NAME (smaller models are faster; larger models may improve quality).
 EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
-# 0.08 keeps weak matches out while still returning relevant support chunks for short queries.
 SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', '0.08'))
 MAX_SESSION_HISTORY_LENGTH = 2
 NEGATION_PATTERN = re.compile(r"\b(don't want to kill|do not want to kill)\b")
 GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash')
 MAX_FOLLOWUP_QUERY_WORDS = 6
 
-# ── Load Corpus ────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'group_23_campus_support_resources')
 CORPUS_PATH = os.path.join(DATA_DIR, '2_corpus_chunks.csv')
@@ -52,7 +48,6 @@ except Exception as e:
 
 if CORPUS_LOADED and SentenceTransformer is not None:
     try:
-        # ST_MODEL_LOCAL_ONLY=1 avoids network fetches in restricted environments; set to 0 to allow downloads.
         local_only = os.getenv('ST_MODEL_LOCAL_ONLY', '1') == '1'
         embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME, local_files_only=local_only)
         embedding_matrix = embedding_model.encode(corpus_texts, convert_to_numpy=True, show_progress_bar=False)
@@ -60,7 +55,6 @@ if CORPUS_LOADED and SentenceTransformer is not None:
     except Exception as e:
         print(f"[WARN] Semantic model unavailable (missing model or network issue). Falling back to TF-IDF. Set ST_MODEL_LOCAL_ONLY=0 to allow model downloads. Details: {e}")
 
-# ── Risk Classification ─────────────────────────────────────────────────────────
 RISK_KEYWORDS = {
     'L3_CRISIS': [
         'suicide', 'suicidal', 'kill myself', 'kill my self', 'self-harm',
@@ -90,7 +84,6 @@ OBJECT_CONTEXT_WORDS = {
 
 
 def _is_non_self_harm_context(text: str) -> bool:
-    # Reduces crisis false positives for object-focused phrases like "don't want to kill my plants".
     if NEGATION_PATTERN.search(text):
         for match in re.finditer(r"\b(my|the|a)\s+([a-z]+)", text):
             if match.group(2) in OBJECT_CONTEXT_WORDS:
@@ -127,33 +120,31 @@ def retrieve_chunks(query: str, top_k: int = 3):
     indices, _ = zip(*valid)
     return df.iloc[list(indices)].copy(), list(indices)
 
-# ── Response Templates ─────────────────────────────────────────────────────────
 CRISIS_RESPONSE = (
     "🆘 **I'm concerned about your safety and want to make sure you get immediate help.**\n\n"
     "**Please contact emergency services right now:**\n\n"
     "- 🚨 **Police / Emergency: 15**\n"
     "- 🚑 **Rescue: 1122**\n\n"
     "**On Campus at UMT Sialkot:**\n\n"
-    "- 🔒 **OSS&V (Safety Office):** Contact immediately on campus\n"
-    "- 💙 **Happiness Center:** cc.center@umt.edu.pk\n\n"
+    "- 🔒 **OSS&V (Safety Office):** Contact immediately on campus\n\n"
     "**You matter. You are not alone. Help is available right now.**\n\n"
     "Please reach out to one of these contacts immediately. Your safety is the top priority."
 )
 
 FALLBACK = (
-    "For any support needs at UMT Sialkot, please contact:\n\n"
-    "- 💙 Happiness Center: **cc.center@umt.edu.pk**\n"
-    "- 📞 City Campus: **+92 52 3241801-7**\n"
-    "- 📧 General: **info@skt.umt.edu.pk**"
+    "For verified UMT Sialkot support, please contact:\n\n"
+    "- 📞 **City Campus:** +92 52 3241801-7\n"
+    "- 📞 **Iqbal Campus:** +92 52 3575234-36\n"
+    "- 📧 **General:** info@skt.umt.edu.pk"
 )
 
-# Appended to every non-crisis response so users always verify with official source
 SOURCE_DISCLAIMER = (
     "\n\n---\n"
     "📋 *Source: UMT Participants Handbook 2025-26 and verified UMT Sialkot contact records. "
     "Contact info and policies may change — always verify at **[skt.umt.edu.pk](https://skt.umt.edu.pk)** "
     "or email **info@skt.umt.edu.pk** for the latest information.*"
 )
+
 
 def _expand_query_with_context(query: str) -> str:
     last_turns = session.get('chat_history', [])
@@ -204,43 +195,41 @@ def build_response(query: str, system: str):
     query_for_retrieval = _expand_query_with_context(query)
     risk = classify_risk(query)
 
-    # ── S0: Keyword-only, no RAG ────────────────────────────────────────────────
     if system == 'S0':
         q = query.lower()
         if any(w in q for w in ['counsel', 'mental', 'help', 'stress', 'anxiety', 'sad', 'depress', 'feel', 'emotion', 'happy', 'unhappy']):
-            r = "UMT Sialkot provides support routing through the **Happiness Center**. Email **cc.center@umt.edu.pk** and verify latest process details through official UMT channels."
+            r = "For verified support, contact the official UMT Sialkot channels and follow handbook-backed campus support routes."
         elif any(w in q for w in ['library', 'book', 'study', 'research', 'tutor', 'lrc']):
-            r = "The **Learning Resource Center (LRC)** is listed as open **8am–9pm** and **10am–5pm on Sundays**. Borrowing guidance includes **4 books for 14 days** for undergraduates."
+            r = "The Learning Resource Center supports academic use, borrowing, and library access according to the handbook."
         elif any(w in q for w in ['health', 'sick', 'doctor', 'medical', 'clinic', 'nurse', 'hospital']):
-            r = "For urgent safety issues, contact **OSS&V** and call **15** or **1122** immediately. For non-emergency support routing, use **cc.center@umt.edu.pk** or **info@skt.umt.edu.pk**."
+            r = "For urgent safety issues, contact OSS&V and call 15 or 1122 immediately. For verified campus support, use the official UMT Sialkot contact channels."
         elif any(w in q for w in ['contact', 'phone', 'number', 'email', 'address', 'location', 'where', 'reach']):
-            r = ("📍 **City Campus:** 21-A Small Industrial Estate, Shahabpura Road — Tel: **+92 52 3241801-7**\n\n"
-                 "📍 **Iqbal Campus:** 2-KM Daska Road — Tel: **+92 52 3575234-36**\n\n"
-                 "📧 **Email:** info@skt.umt.edu.pk")
+            r = (
+                "📍 **City Campus:** 21-A Small Industrial Estate, Shahabpura Road — Tel: **+92 52 3241801-7**\n\n"
+                "📍 **Iqbal Campus:** 2-KM Daska Road — Tel: **+92 52 3575234-36**\n\n"
+                "📧 **Email:** info@skt.umt.edu.pk"
+            )
         elif any(w in q for w in ['exam', 'final', 'test', 'midterm', 'result', 'grade']):
-            r = "Exam schedules and result-related updates are provided through official university channels (student portal, Moodle, and notices from relevant offices). For stress support, contact **cc.center@umt.edu.pk**."
-        elif any(w in q for w in ['tarbiyah', 'personal', 'growth', 'character', 'values', 'islamic']):
-            r = "The handbook lists a **Tarbiyah Department** support area. Please confirm current services through official campus channels such as **info@skt.umt.edu.pk**."
+            r = "Exam schedules and result-related updates are provided through official university channels such as the student portal, Moodle, and notices from relevant offices."
+        elif any(w in q for w in ['portal', 'prs', 'ft', 'clearance', 'unfreeze']):
+            r = "Use the student portal or PRS-supported process for registration, semester freeze/unfreeze, and final transcript clearance as described in the handbook."
         else:
-            r = "Thank you for reaching out. For support at UMT Sialkot, contact **info@skt.umt.edu.pk** or call **+92 52 3241801**. The **Happiness Center** provides free counseling at cc.center@umt.edu.pk."
+            r = "For verified UMT Sialkot support, use official campus contact details and handbook-backed procedures."
         return r + SOURCE_DISCLAIMER, 'L0_NORMAL', []
 
-    # ── S1 & S2: RAG ────────────────────────────────────────────────────────────
     chunks, _ = retrieve_chunks(query_for_retrieval)
 
     if system == 'S1':
-        # Plain RAG — no safety layer
         if len(chunks) == 0:
             return FALLBACK + SOURCE_DISCLAIMER, 'L0_NORMAL', []
-        body = "Here's what I found in UMT resources:\n\n" + chunks.iloc[0]['text']
+        body = "Here's what I found in UMT resources:\n\n" + "\n\n".join(chunks.head(3)['text'].tolist())
         return body + SOURCE_DISCLAIMER, 'L0_NORMAL', list(chunks['chunk_id'])
 
-    # S2/S3 — Safety-aware RAG
     if risk == 'L3_CRISIS':
         return CRISIS_RESPONSE, 'L3_CRISIS', []
 
     if len(chunks) == 0:
-        return FALLBACK, risk, []
+        return FALLBACK + SOURCE_DISCLAIMER, risk, []
 
     chunk_ids = list(chunks['chunk_id'])
     combined_text = _combine_chunk_text(chunks)
@@ -249,26 +238,22 @@ def build_response(query: str, system: str):
         generated = _try_generate_with_gemini(query, combined_text, risk)
         if generated:
             return generated + SOURCE_DISCLAIMER, risk, chunk_ids
-        # If optional generation is unavailable, fall back to deterministic S2-style response composition.
 
     prefix = suffix = ''
     if risk == 'L2_DISTRESS':
-        prefix = ("💙 I hear you — what you're going through sounds really difficult, "
-                  "and it takes courage to reach out. Support is here for you.\n\n")
-        suffix = ("\n\n**Please connect with the Happiness Center at cc.center@umt.edu.pk "
-                  "as soon as possible — they are trained professionals who genuinely care "
-                  "and can help you through this.**")
+        prefix = "💙 I hear you — what you're going through sounds really difficult, and it takes courage to reach out. Support is here for you.\n\n"
+        suffix = "\n\nPlease use the official campus support route and reach out through the verified UMT Sialkot contact channels."
     elif risk == 'L1_STRESS':
-        prefix = "I understand you're feeling stressed — that's completely normal, especially around exam time. Here's what can help:\n\n"
-        suffix = ("\n\nRemember, the **Happiness Center** (cc.center@umt.edu.pk) provides "
-                  "free, confidential support anytime you need it. 💙")
+        prefix = "I understand you're feeling stressed — that's completely normal. Here's what can help based on UMT resources:\n\n"
+        suffix = "\n\nIf you need more help, use the verified UMT Sialkot contact details and handbook-backed procedures."
 
     return prefix + combined_text + suffix + SOURCE_DISCLAIMER, risk, chunk_ids
 
-# ── Routes ─────────────────────────────────────────────────────────────────────
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -276,7 +261,7 @@ def chat():
     if not data:
         return jsonify({'error': 'Invalid JSON'}), 400
 
-    msg    = data.get('message', '').strip()
+    msg = data.get('message', '').strip()
     system = data.get('system', 'S2')
 
     if not msg:
@@ -290,11 +275,12 @@ def chat():
     session['chat_history'] = history[-MAX_SESSION_HISTORY_LENGTH:]
 
     return jsonify({
-        'response':          response,
-        'risk_level':        risk_level,
-        'retrieved_chunks':  chunk_ids,
-        'system':            system
+        'response': response,
+        'risk_level': risk_level,
+        'retrieved_chunks': chunk_ids,
+        'system': system
     })
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
