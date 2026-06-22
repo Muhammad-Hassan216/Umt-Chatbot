@@ -22,6 +22,7 @@ SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', '0.08'))
 MAX_SESSION_HISTORY_LENGTH = 2
 NEGATION_PATTERN = re.compile(r"\b(don't want to kill|do not want to kill)\b")
 GEMINI_MODEL_NAME = os.getenv('GEMINI_MODEL_NAME', 'gemini-1.5-flash')
+MAX_FOLLOWUP_QUERY_WORDS = 6
 
 # ── Load Corpus ────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +49,7 @@ except Exception as e:
 
 if CORPUS_LOADED and SentenceTransformer is not None:
     try:
+        # ST_MODEL_LOCAL_ONLY=1 avoids network fetches in restricted environments; set to 0 to allow downloads.
         local_only = os.getenv('ST_MODEL_LOCAL_ONLY', '1') == '1'
         embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME, local_files_only=local_only)
         embedding_matrix = embedding_model.encode(corpus_texts, convert_to_numpy=True, show_progress_bar=False)
@@ -85,6 +87,7 @@ OBJECT_CONTEXT_WORDS = {
 
 
 def _is_non_self_harm_context(text: str) -> bool:
+    # Reduces crisis false positives for object-focused phrases like "don't want to kill my plants".
     if NEGATION_PATTERN.search(text):
         for match in re.finditer(r"\b(my|the|a)\s+([a-z]+)", text):
             if match.group(2) in OBJECT_CONTEXT_WORDS:
@@ -152,7 +155,7 @@ SOURCE_DISCLAIMER = (
 def _expand_query_with_context(query: str) -> str:
     last_turns = session.get('chat_history', [])
     follow_up_markers = ['that', 'it', 'more', 'this', 'explain', 'details']
-    if len(query.split()) <= 6 and any(m in query.lower() for m in follow_up_markers) and last_turns:
+    if len(query.split()) <= MAX_FOLLOWUP_QUERY_WORDS and any(m in query.lower() for m in follow_up_markers) and last_turns:
         return f"{last_turns[-1].get('user', '')} {query}".strip()
     return query
 
