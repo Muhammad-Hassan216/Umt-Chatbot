@@ -18,6 +18,7 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-change-me')
 # Default sentence-transformers embedding model identifier used for semantic retrieval.
+# Override via EMBEDDING_MODEL_NAME (smaller models are faster; larger models may improve quality).
 EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
 # 0.08 keeps weak matches out while still returning relevant support chunks for short queries.
 SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', '0.08'))
@@ -57,7 +58,7 @@ if CORPUS_LOADED and SentenceTransformer is not None:
         embedding_matrix = embedding_model.encode(corpus_texts, convert_to_numpy=True, show_progress_bar=False)
         print(f"[OK] Semantic retrieval enabled with {len(df)} chunks")
     except Exception as e:
-        print(f"[WARN] Semantic model unavailable, fallback to TF-IDF: {e}")
+        print(f"[WARN] Semantic model unavailable (missing model or network issue). Falling back to TF-IDF. Set ST_MODEL_LOCAL_ONLY=0 to allow model downloads. Details: {e}")
 
 # ── Risk Classification ─────────────────────────────────────────────────────────
 RISK_KEYWORDS = {

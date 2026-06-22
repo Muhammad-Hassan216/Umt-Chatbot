@@ -86,8 +86,8 @@ def _scrape_chunks():
             text = _normalize(' '.join(blocks[:120]))
             for chunk in _split_to_chunks(text, min_words=70, max_words=130)[:MAX_CHUNKS_PER_URL]:
                 scraped.append((title, chunk))
-        except requests.RequestException:
-            print(f'[WARN] Failed to scrape {url}')
+        except requests.RequestException as e:
+            print(f'[WARN] Failed to scrape {url}: {type(e).__name__}: {e}')
             continue
     return scraped
 

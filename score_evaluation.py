@@ -24,6 +24,7 @@ def _split_keywords(text: str):
 
 def _score_1_to_5(value: float) -> int:
     value = max(0.0, min(1.0, value))
+    # Maps [0.0, 1.0] to [1, 5]: round(value * 4 + 1)
     return max(1, min(5, int(round(value * SCORE_SCALE + SCORE_BASE))))
 
 
